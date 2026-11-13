@@ -1,19 +1,19 @@
 {
   "product": "aevidine",
-  "desktopShell": "ba85fc55ab",
+  "desktopShell": "89918d836d",
   "mac": {
-    "version": "1.0.455897",
-    "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455897/Aevidine-1.0.455897-arm64.dmg",
-    "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455897/Aevidine-1.0.455897-x64.dmg"
+    "version": "1.0.456115",
+    "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456115/Aevidine-1.0.456115-arm64.dmg",
+    "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456115/Aevidine-1.0.456115-x64.dmg"
   },
-  "updated": "2026-11-13T14:23:39.438Z",
+  "updated": "2026-11-13T18:01:49.865Z",
   "windows": {
-    "version": "1.0.455897",
-    "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455897/Aevidine-Setup-1.0.455897.exe"
+    "version": "1.0.456115",
+    "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456115/Aevidine-Setup-1.0.456115.exe"
   },
   "linux": {
-    "version": "1.0.455897",
-    "appimage": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455897/Aevidine-1.0.455897-x86_64.AppImage",
-    "deb": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455897/Aevidine-1.0.455897-amd64.deb"
+    "version": "1.0.456115",
+    "appimage": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456115/Aevidine-1.0.456115-x86_64.AppImage",
+    "deb": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456115/Aevidine-1.0.456115-amd64.deb"
   }
 }
