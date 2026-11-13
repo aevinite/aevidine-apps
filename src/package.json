@@ -32,6 +32,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "updater.js",
       "site.json",
       "package.json"
     ],
@@ -56,6 +57,13 @@
       "target": [
         {
           "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
           "arch": [
             "arm64",
             "x64"
