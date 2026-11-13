@@ -85,7 +85,8 @@ jobs:
           OK=0
           for i in $(seq 1 45); do
             sleep 2
-            URL=$(curl -s -m 3 http://127.0.0.1:9333/json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const p=JSON.parse(s).find(x=>x.type==="page");console.log(p?p.url:"")}catch{console.log("")}})')
+            # Not answering yet (still starting) is normal — keep asking (|| true: one refused connection must not end the test).
+            URL=$(curl -s -m 3 http://127.0.0.1:9333/json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const p=JSON.parse(s).find(x=>x.type==="page");console.log(p?p.url:"")}catch{console.log("")}})') || true
             [ -n "$URL" ] && echo "Open page: $URL"
             case "$URL" in "$ORIGIN"*) OK=1; break;; esac
           done
@@ -96,7 +97,11 @@ jobs:
       - name: Add the installers to the release
         shell: bash
         run: |
-          shopt -s nullglob
-          FILES=(src/dist/*.exe src/dist/*.exe.blockmap src/dist/*.AppImage src/dist/*.deb src/dist/latest.yml src/dist/latest-linux.yml)
+          # Only the files this platform made (Windows has no latest-linux.yml and the other way round).
+          FILES=()
+          for f in src/dist/*.exe src/dist/*.exe.blockmap src/dist/*.AppImage src/dist/*.deb src/dist/latest.yml src/dist/latest-linux.yml; do
+            [ -f "$f" ] && FILES+=("$f")
+          done
+          [ ${#FILES[@]} -gt 0 ] || { echo "Nothing was built."; exit 1; }
           gh release upload "$TAG" "${FILES[@]}" --clobber -R "$GITHUB_REPOSITORY"
           printf '%s\n' "${FILES[@]##*/}"
