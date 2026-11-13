@@ -81,11 +81,22 @@ function createWindow() {
   const wc = win.webContents;
   // Our pages stay inside; anything else (a payment page, a map, a help link) opens in the normal browser.
   wc.on("will-navigate", (e, url) => { if (!ours(url)) { e.preventDefault(); openOutside(url); } });
-  wc.setWindowOpenHandler(({ url }) => {
-    // The app's print and report windows (about:blank, or our own pages) open as real child windows, like in Chrome.
+  wc.setWindowOpenHandler(({ url, features }) => {
+    const webPreferences = { preload: path.join(__dirname, "preload.js"), contextIsolation: true, sandbox: true };
+    // A page of ours opened like a NEW TAB (window.open with no size — the admin console opening a restaurant's
+    // Manager / Owner panel) gets a full-size window of its own, the size of this one, as Chrome would give it a
+    // whole tab. FIXED 2026-11-14: it used to open as a small 800×600 child window, which put the panel in its
+    // narrow layout (menu in a drawer) — part of the owner's "flickering, stuck" manager window (the panel's own
+    // half is in public/panels/editor/app.js → syncNavFit).
+    if (ours(url) && !/\b(width|height)=/.test(features || "")) {
+      const b = win.getBounds();
+      return { action: "allow", overrideBrowserWindowOptions: { width: b.width, height: b.height, x: b.x + 24, y: b.y + 24,
+        minWidth: 360, minHeight: 500, autoHideMenuBar: true, backgroundColor: "#0D1017", webPreferences } };
+    }
+    // The app's print, preview and report windows (about:blank, or ours with a size asked for) open as child windows
+    // of that size, like in Chrome.
     if (url === "about:blank" || ours(url)) {
-      return { action: "allow", overrideBrowserWindowOptions: { parent: win, autoHideMenuBar: true, backgroundColor: "#ffffff",
-        webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, sandbox: true } } };
+      return { action: "allow", overrideBrowserWindowOptions: { parent: win, autoHideMenuBar: true, backgroundColor: "#ffffff", webPreferences } };
     }
     openOutside(url);
     return { action: "deny" };
