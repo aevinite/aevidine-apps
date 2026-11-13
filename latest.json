@@ -1,0 +1,10 @@
+{
+  "product": "aevidine",
+  "desktopShell": "33101328aa",
+  "mac": {
+    "version": "1.0.455164",
+    "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-1.0.455164-arm64.dmg",
+    "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-1.0.455164-x64.dmg"
+  },
+  "updated": "2026-11-13T05:39:47.303Z"
+}
