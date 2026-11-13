@@ -93,14 +93,19 @@ jobs:
           $pn = (Get-Content src/package.json -Raw | ConvertFrom-Json).build.productName
           $app = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter "$pn.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $app) { throw "The installed app is gone." }
-          "Before: $($app.VersionInfo.ProductVersion)"
+          # The real installed version: Windows' list of installed apps. (The .exe's own "file version" can't hold a part
+          # above 65535, so 1.0.456143 shows there as 1.0.65535.0 — useless for this check.)
+          function Installed-Version { (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "$pn*" } | Select-Object -First 1).DisplayVersion }
+          $before = Installed-Version
+          "Before: $before"
+          if ($before -ne $v) { throw "Installed version is $before, expected $v." }
           $env:AEVI_UPDATE_FEED = "http://127.0.0.1:9480"; $env:AEVI_UPDATE_AUTO = "1"; $env:AEVI_UPDATE_NO_RELAUNCH = "1"
           $env:AEVI_UPDATE_TEST_HIDDEN = "1"; $env:AEVI_USER_DATA = "$env:RUNNER_TEMP\aevi-update-profile"
           Start-Process $app.FullName
           $ok = $false
           for ($i = 0; $i -lt 90 -and -not $ok; $i++) {
             Start-Sleep 2
-            $ver = (Get-Item $app.FullName -ErrorAction SilentlyContinue).VersionInfo.ProductVersion
+            $ver = Installed-Version
             if ($ver -eq $next) { $ok = $true }
           }
           Get-Process | Where-Object { $_.Path -eq $app.FullName } | Stop-Process -Force -ErrorAction SilentlyContinue
