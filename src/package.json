@@ -3,7 +3,7 @@
   "productName": "Aevidine",
   "version": "1.0.0",
   "private": true,
-  "description": "Aevidine for Windows, Mac and Linux — a window around https://aevinite.shop (docs/APPS-EVERYWHERE.md, P3).",
+  "description": "Aevidine for Windows, Mac and Linux \u2014 a window around https://aevinite.shop (docs/APPS-EVERYWHERE.md, P3).",
   "author": "Aevinite <support@aevinite.com>",
   "homepage": "https://aevidine.aevinite.com",
   "main": "main.js",
@@ -24,25 +24,93 @@
   "build": {
     "appId": "com.aevinite.aevidine.desktop",
     "productName": "Aevidine",
-    "copyright": "© Aevinite",
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "site.json", "package.json"],
-    "protocols": [{ "name": "Aevidine sign-in", "schemes": ["aevidine"] }],
-    "publish": [{ "provider": "github", "owner": "aevinite", "repo": "aevidine-apps", "releaseType": "release" }],
+    "copyright": "\u00a9 Aevinite",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "site.json",
+      "package.json"
+    ],
+    "protocols": [
+      {
+        "name": "Aevidine sign-in",
+        "schemes": [
+          "aevidine"
+        ]
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "aevinite",
+        "repo": "aevidine-apps",
+        "releaseType": "release"
+      }
+    ],
     "mac": {
       "category": "public.app-category.business",
-      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
       "identity": null,
       "artifactName": "Aevidine-${version}-${arch}.${ext}"
     },
-    "dmg": { "title": "Aevidine" },
+    "dmg": {
+      "title": "Aevidine"
+    },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "artifactName": "Aevidine-Setup-${version}.${ext}"
     },
-    "nsis": { "oneClick": true, "perMachine": false, "deleteAppDataOnUninstall": false },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
+    "appx": {
+      "identityName": "Aevinite.Aevidine",
+      "publisher": "CN=B6EC2A4A-DF2A-45C2-A2A2-F41867206B5A",
+      "publisherDisplayName": "Aevinite",
+      "applicationId": "Aevidine",
+      "displayName": "Aevidine",
+      "backgroundColor": "#0D1017",
+      "languages": [
+        "en-US"
+      ],
+      "artifactName": "Aevidine-Store-${version}.${ext}"
+    },
     "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64"] }, { "target": "deb", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "category": "Office",
       "maintainer": "Aevinite <support@aevinite.com>",
       "artifactName": "Aevidine-${version}-${arch}.${ext}"
