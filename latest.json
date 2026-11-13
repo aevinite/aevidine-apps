@@ -6,5 +6,14 @@
     "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-1.0.455164-arm64.dmg",
     "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-1.0.455164-x64.dmg"
   },
-  "updated": "2026-11-13T05:39:47.303Z"
+  "updated": "2026-11-13T06:33:42.597Z",
+  "windows": {
+    "version": "1.0.455164",
+    "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-Setup-1.0.455164.exe"
+  },
+  "linux": {
+    "version": "1.0.455164",
+    "appimage": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-1.0.455164-x86_64.AppImage",
+    "deb": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.455164/Aevidine-1.0.455164-amd64.deb"
+  }
 }
