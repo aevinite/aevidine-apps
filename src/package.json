@@ -62,8 +62,9 @@
           ]
         }
       ],
-      "identity": null,
-      "artifactName": "Aevidine-${version}-${arch}.${ext}"
+      "identity": "-",
+      "artifactName": "Aevidine-${version}-${arch}.${ext}",
+      "hardenedRuntime": false
     },
     "dmg": {
       "title": "Aevidine"
