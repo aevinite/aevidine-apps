@@ -6,7 +6,7 @@
     "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456325/Aevidine-1.0.456325-arm64.dmg",
     "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456325/Aevidine-1.0.456325-x64.dmg"
   },
-  "updated": "2026-11-15T20:22:55.576Z",
+  "updated": "2026-11-20T16:19:39.799Z",
   "windows": {
     "version": "1.0.456325",
     "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v1.0.456325/Aevidine-Setup-1.0.456325.exe",
@@ -20,6 +20,12 @@
   },
   "android": {
     "store": "https://play.google.com/store/apps/details?id=com.aevinite.aevidine",
-    "public": false
+    "public": false,
+    "tracks": {
+      "alpha": {
+        "versionCode": 466097,
+        "name": "2.5"
+      }
+    }
   }
 }
