@@ -10,7 +10,7 @@
 //   · Google sign-in in the normal browser (Google refuses embedded windows), handed back to the app with the same
 //     one-time, two-minute PKCE code the Android app uses (lib/appHandoff.ts) through the aevidine:// address
 //   · downloads go straight to Downloads, with a notification
-//   · updates inside the app on every computer: a bar says "1.0.N is ready — Restart to update" (updater.js)
+//   · updates inside the app on every computer: a pill at the top right says "Aevidine 2.N is ready — Restart", with Later and Schedule (updater.js, preload.js)
 "use strict";
 const { app, BrowserWindow, Menu, Notification, dialog, shell, session } = require("electron");
 const path = require("node:path");
@@ -156,7 +156,7 @@ function setupMenu() {
 
 // ── updates inside the app (updater.js — the same file in Campus Conveyance's desktop app) ─────────────────────────
 // OBITUARY (2026-11-13): the Mac "Update now" used to open the new .dmg for the person to drag into Applications, and
-// Windows asked with a pop-up. One in-window bar now does it everywhere (owner: "updates inside the app, like VS Code").
+// Windows asked with a pop-up. One in-window pill now does it everywhere (owner: "updates inside the app, like VS Code"; the pill, 2026-11-20).
 const updater = require("./updater")({
   getWindow: () => win,
   repo: "aevinite/aevidine-apps",

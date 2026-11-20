@@ -1,8 +1,9 @@
 // Updates INSIDE the app (owner, 2026-11-13: "updates should come inside the app, like VS Code — no other apps").
 //
 // One flow on every computer: the app looks for a newer version (at start, every 6 hours, and on Help → Check for
-// updates), downloads it in the background, then a bar at the bottom of the window says "Aevidine 1.0.N is ready —
-// Restart to update". One click: the app closes, the new version takes its place, and it opens again.
+// updates), downloads it in the background, then a pill at the top right of the window says "Aevidine 2.N is ready —
+// Restart" (preload.js). One click: the app closes, the new version takes its place, and it opens again. Or Later /
+// Schedule (below).
 //
 //   · Windows (direct download) and Linux AppImage — electron-updater, from the public binaries repo (latest.yml).
 //   · Mac — our own updater: electron-updater's Mac path needs an Apple Developer ID, we sign ad-hoc. It downloads the
@@ -46,7 +47,7 @@ module.exports = function createUpdater({ getWindow, repo, appName, downloadPage
   let busy = false;
   let macReady = null;                  // { app: path of the new .app } once downloaded and checked
 
-  const send = () => { const w = getWindow(); if (w && !w.isDestroyed()) w.webContents.send("aevi:update", { ...state, appName }); };
+  const send = () => { const w = getWindow(); if (w && !w.isDestroyed()) w.webContents.send("aevi:update", { ...state, appName, current: app.getVersion() }); };
   const set = (s) => { state = s; send(); refreshMenu(); };
   let refreshMenu = () => {};
 
@@ -164,10 +165,38 @@ module.exports = function createUpdater({ getWindow, repo, appName, downloadPage
     else electronUpdater().quitAndInstall(true, !NO_RELAUNCH);      // silent install, then open the new version
   }
 
+  // ── Later and Schedule (owner, 2026-11-20: the pill "should have later and schedule option where it can remind you
+  // later or at a particular schedule time") ─────────────────────────────────────────────────────────────────────
+  //   later(ms)      the pill goes away and comes back after ms (1 hour, 4 hours, tomorrow 9 AM — the window picks)
+  //   schedule(at)   restart into the update at that time; one minute before, the pill counts down with "Not now"
+  //   unschedule()   back to plain "ready"
+  // Both live while the app runs: quit it and the next start checks again and asks again (Windows also installs a
+  // downloaded update on quit by itself). Nothing restarts without the person having picked it.
+  let laterTimer = null, schedTimer = null, warnTimer = null;
+  const clearTimers = () => { clearTimeout(laterTimer); clearTimeout(schedTimer); clearTimeout(warnTimer); };
+  function later(ms) {
+    clearTimers();
+    const wait = Math.max(60_000, Math.min(Number(ms) || 3600_000, 48 * 3600_000));
+    set({ ...state, dismissed: true, remindAt: Date.now() + wait, scheduledAt: null, countdown: false });
+    laterTimer = setTimeout(() => set({ ...state, dismissed: false, remindAt: null }), wait);
+  }
+  function schedule(at) {
+    const when = Number(at) || 0;
+    if (state.phase !== "ready" || when < Date.now() + 60_000 || when > Date.now() + 48 * 3600_000) return false;
+    clearTimers();
+    set({ ...state, dismissed: false, remindAt: null, scheduledAt: when, countdown: false });
+    warnTimer = setTimeout(() => set({ ...state, countdown: true }), when - Date.now() - 60_000);
+    schedTimer = setTimeout(() => install(), when - Date.now());
+    return true;
+  }
+  function unschedule() { clearTimers(); set({ ...state, dismissed: false, remindAt: null, scheduledAt: null, countdown: false }); }
+
   ipcMain.handle("aevi:update-install", () => { install(); return true; });
-  ipcMain.handle("aevi:update-later", () => { set({ ...state, dismissed: true }); return true; });
+  ipcMain.handle("aevi:update-later", (_e, ms) => { later(ms); return true; });
+  ipcMain.handle("aevi:update-schedule", (_e, at) => schedule(at));
+  ipcMain.handle("aevi:update-unschedule", () => { unschedule(); return true; });
   ipcMain.handle("aevi:update-open-download", () => { shell.openExternal(downloadPage); return true; });
-  ipcMain.handle("aevi:update-state", () => ({ ...state, appName }));
+  ipcMain.handle("aevi:update-state", () => ({ ...state, appName, current: app.getVersion() }));
 
   return {
     check,
