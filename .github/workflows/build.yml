@@ -17,6 +17,8 @@ on:
       tag: { description: "Release tag to add the installers to (e.g. v1.0.455164)", required: true }
       ref: { description: "Commit on the shell branch that holds this release's app source", required: true }
       site: { description: "The site the app opens (the test checks the app reaches it)", required: true }
+      # Which computers to build (owner, 2026-11-15: pick Mac / Windows / Linux one by one in the CRM). A JSON list.
+      os: { description: "JSON list of runners: windows-latest, ubuntu-latest", required: false, default: '["windows-latest","ubuntu-latest"]' }
 permissions:
   contents: write
 concurrency:
@@ -27,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: ${{ fromJSON(inputs.os || '["windows-latest","ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
@@ -139,8 +141,9 @@ jobs:
 
       # THE MICROSOFT STORE PACKAGE (docs/MICROSOFT-STORE.md) — only for an app whose package.json has a `build.appx`
       # section (the identity Partner Center gave its reserved name). Unsigned on purpose: the Store signs it, which is why
-      # a Store install passes Smart App Control. The Store refuses any version part above 65535, so version 1.0.N is
-      # packaged as 1.<N div 10000>.<N mod 10000>(.0) — the same number N, still rising with every release.
+      # a Store install passes Smart App Control. Since 2026-11-15 versions are short (2.N.0 → Store 2.N.0.0, the same
+      # name). The old long ones (1.0.N, a part above 65535, which the Store refuses) were packaged as
+      # 1.<N div 10000>.<N mod 10000>.0; 2.x is above all of them, so the Store always sees the new name as newer.
       - name: Build the Microsoft Store package
         if: runner.os == 'Windows'
         working-directory: src
@@ -148,8 +151,11 @@ jobs:
         run: |
           HAS=$(node -p 'Boolean(require("./package.json").build.appx)')
           if [ "$HAS" != "true" ]; then echo "No Store identity for this app — no Store package."; exit 0; fi
-          N="${TAG##*.}"
-          SV="1.$((10#$N / 10000)).$((10#$N % 10000))"
+          V="${TAG#v}"
+          case "$V" in
+            1.0.*) N="${V##*.}"; SV="1.$((10#$N / 10000)).$((10#$N % 10000))" ;;
+            *) SV="$V" ;;
+          esac
           echo "Store package version: $SV.0 (version $TAG)"
           npx electron-builder --win appx --publish never "-c.extraMetadata.version=$SV"
           A=$(ls dist/*.appx | head -1)
