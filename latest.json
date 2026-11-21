@@ -7,7 +7,7 @@
     "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-2.6.0-x64.dmg",
     "shell": "4fa2a0a3b1"
   },
-  "updated": "2026-11-20T17:01:54.188Z",
+  "updated": "2026-11-21T08:39:42.693Z",
   "windows": {
     "version": "2.6.0",
     "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-Setup-2.6.0.exe",
@@ -26,8 +26,8 @@
     "public": false,
     "tracks": {
       "alpha": {
-        "versionCode": 466097,
-        "name": "2.5"
+        "versionCode": 467077,
+        "name": "2.7"
       }
     }
   }
