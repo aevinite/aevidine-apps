@@ -1,25 +1,25 @@
 {
   "product": "aevidine",
-  "desktopShell": "4fa2a0a3b1",
+  "desktopShell": "7832b3c948",
   "mac": {
-    "version": "2.6.0",
-    "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-2.6.0-arm64.dmg",
-    "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-2.6.0-x64.dmg",
-    "shell": "4fa2a0a3b1"
+    "version": "2.7.1",
+    "dmg": "https://github.com/aevinite/aevidine-apps/releases/download/v2.7.1/Aevidine-2.7.1-arm64.dmg",
+    "dmgIntel": "https://github.com/aevinite/aevidine-apps/releases/download/v2.7.1/Aevidine-2.7.1-x64.dmg",
+    "shell": "7832b3c948"
   },
-  "updated": "2026-11-21T08:39:42.693Z",
+  "updated": "2026-11-21T13:02:32.636Z",
   "windows": {
-    "version": "2.6.0",
-    "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-Setup-2.6.0.exe",
+    "version": "2.7.1",
+    "exe": "https://github.com/aevinite/aevidine-apps/releases/download/v2.7.1/Aevidine-Setup-2.7.1.exe",
     "store": "ms-windows-store://pdp/?productid=9NK1L7PDHKWJ",
     "storeWeb": "https://apps.microsoft.com/detail/9NK1L7PDHKWJ",
-    "shell": "4fa2a0a3b1"
+    "shell": "7832b3c948"
   },
   "linux": {
-    "version": "2.6.0",
-    "appimage": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-2.6.0-x86_64.AppImage",
-    "deb": "https://github.com/aevinite/aevidine-apps/releases/download/v2.6.0/Aevidine-2.6.0-amd64.deb",
-    "shell": "4fa2a0a3b1"
+    "version": "2.7.1",
+    "appimage": "https://github.com/aevinite/aevidine-apps/releases/download/v2.7.1/Aevidine-2.7.1-x86_64.AppImage",
+    "deb": "https://github.com/aevinite/aevidine-apps/releases/download/v2.7.1/Aevidine-2.7.1-amd64.deb",
+    "shell": "7832b3c948"
   },
   "android": {
     "store": "https://play.google.com/store/apps/details?id=com.aevinite.aevidine",
