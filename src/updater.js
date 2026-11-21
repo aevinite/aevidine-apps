@@ -18,7 +18,7 @@
 // profile (desktop/tools/update-test.mjs).
 // This file is the same in Campus Conveyance's desktop app (campus_conveyance desktop/updater.js) — change both.
 "use strict";
-const { app, ipcMain, Menu, dialog, shell } = require("electron");
+const { app, ipcMain, Menu, dialog, shell, nativeImage } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
@@ -48,7 +48,22 @@ module.exports = function createUpdater({ getWindow, repo, appName, downloadPage
   let macReady = null;                  // { app: path of the new .app } once downloaded and checked
 
   const send = () => { const w = getWindow(); if (w && !w.isDestroyed()) w.webContents.send("aevi:update", { ...state, appName, current: app.getVersion() }); };
-  const set = (s) => { state = s; send(); refreshMenu(); };
+  const set = (s) => { state = s; send(); refreshMenu(); badge(s.phase === "ready" || s.phase === "manual"); };
+  // THE RED DOT ON THE APP'S OWN ICON (owner, 2026-11-21: "it should show like notification, red dot, that something is
+  // there"): on the Mac's Dock, the Windows taskbar, and Linux docks that show counts — while an update waits.
+  let badged = null;
+  const DOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAACN0lEQVRYw9VXy0rDQBTVCnVT/QP7HYJUUXTncyG1LW6KuPexEq3+ga9PsLbubAXxUb/CglqfKChd2GAJ9AXteG+YidNpmpg0sThwIMnczD0z9zH3dnT8t0EI6QUMAkKAJYog/dbjlNJuwALgDFAizUeJyqCs2w7FnYBZwCMxP94Ai4Auq8p7ACcNy9ZqpHJ7RwrnF0SOHynA58pdRpnTGEnTpoEfvIA0v0r1M0e+tndJdnyKvPcPaALnUKaay4kkcC2vmZ2n+R3L0UPyMTzaVLEIlJWjMfFE0oYnAQIu/thr5TKR1iO/VixC2thU1uBGAv1Kj8A8v3MpsmVZuUpibV08iYBeqL0wKfkg2rJyBvkwzhN40gxRGruqw5mxuaFPjIyRqiTxJMJaBM7YLHqyXcoZ8rv7PIFTLc8vMdtnJ2dsJ5CdmOZ9oVQXEfAyxGYqN7e2K2dQktXPGOQJBNlXzGpOEShcpngCczyBVdX7IYE4RUCIhhWewIpKAIQcIxCrI7DMEwioJri4dM4EqSuegL/dTujjCXgAxbaFoZiI8jt79ieiPZ1E1JCKc+1JxXgZPTsRjlg1GV5GlEToD65jv1FBkqwrSFoggf8KBcmxbkHStCSDBIJ2NGNz5djrd36N0Wa9KAUnwitVL0RxDmUEh2PK+6yU5QnNsjyTUS4WtSyH58r9fbOy/PjXO9dpTB4sNCavtDFx2dEhuTF2MYEYtGZFKhO2pTXTMY2PXmCsOQ3Qb55/121/A7bTWsRHyDFjAAAAAElFTkSuQmCC";
+  function badge(on) {
+    if (on === badged) return;
+    badged = on;
+    try {
+      if (process.platform === "darwin" && app.dock) app.dock.setBadge(on ? "•" : "");
+      else if (process.platform === "win32") {
+        const w = getWindow();
+        if (w && !w.isDestroyed()) w.setOverlayIcon(on ? nativeImage.createFromDataURL(DOT) : null, on ? "Update ready" : "");
+      } else app.setBadgeCount(on ? 1 : 0);
+    } catch { /* a dock that shows no badges */ }
+  }
   let refreshMenu = () => {};
 
   const kind = () => {
@@ -130,6 +145,10 @@ module.exports = function createUpdater({ getWindow, repo, appName, downloadPage
       while kill -0 ${process.pid} 2>/dev/null; do sleep 0.2; done
       OLD="$1"; NEW="$2"; TMP="$3"
       if mv "$OLD" "$OLD.updating" && mv "$NEW" "$OLD"; then rm -rf "$OLD.updating"; else [ -d "$OLD" ] || mv "$OLD.updating" "$OLD"; fi
+      # THE DOCK SHOWS THE NEW ICON (owner, 2026-11-21: "after restart, it shows the old logo"): macOS keeps a picture of
+      # each app's icon and does not always notice that the app was swapped. A fresh date on the app and a re-register with
+      # Launch Services make it read the new one when the app opens.
+      touch "$OLD"; /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$OLD" >/dev/null 2>&1
       rm -rf "$TMP"
       [ "$4" = "norelaunch" ] || open "$OLD"`;
     spawn("/bin/sh", ["-c", script, "sh", cur, macReady.app, macReady.dir, NO_RELAUNCH ? "norelaunch" : ""], { detached: true, stdio: "ignore" }).unref();

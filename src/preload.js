@@ -46,9 +46,31 @@ if (window === window.top) {
 // under it (light or dark), the brand serif and gold, and the panels' motion values: enter 280 ms ease-out, leave
 // 180 ms, nothing but opacity and transform. In its own shadow root: the site can't restyle it and it can't touch the site.
 if (window === window.top) {
-  let host = null, root = null, last = null, open = false, sub = "";
+  let host = null, root = null, last = null, open = false, sub = "", forceOpen = false, slotTimer = null, waitKey = null, settled = false, settleWait = false;
+  // THE PANELS SHOW IT IN THEIR OWN MENUS (public/app-update-ui.js — owner 2026-11-21, like WhatsApp): while an update waits,
+  // say so through localStorage "aevi.update.waiting" + the "aevi:update-waiting" event; a tap on their row sends
+  // "aevi:update-open", which opens this card. Where a page shows it in a menu (it marks <html data-aevi-update-slot>), the
+  // bottom-left button below stays away — measured: floating, it covered the owner sidebar's footer, a manager rail
+  // button and a waiter's table.
+  const syncWaiting = (s) => {
+    const on = !!s && (s.phase === "ready" || s.phase === "manual");
+    const key = on ? nice(s.version) || "?" : "";
+    if (key === waitKey) return;
+    waitKey = key;
+    try { if (on) localStorage.setItem("aevi.update.waiting", JSON.stringify({ name: nice(s.version), at: Date.now() })); else localStorage.removeItem("aevi.update.waiting"); } catch { /* fine */ }
+    try { window.dispatchEvent(new Event("aevi:update-waiting")); } catch { /* fine */ }
+  };
+  const slotShown = () => {
+    const docs = [document];
+    for (const f of document.querySelectorAll("iframe")) { try { if (f.contentDocument) docs.push(f.contentDocument); } catch { /* another site */ } }
+    return docs.some((d) => d.documentElement && d.documentElement.hasAttribute("data-aevi-update-slot"));
+  };
+  window.addEventListener("aevi:update-open", () => { forceOpen = true; open = true; sub = ""; draw(last); });
   const invoke = (ch, arg) => ipcRenderer.invoke(ch, arg).catch(() => {});
-  const nice = (v) => String(v || "").replace(/\.0$/, "");                 // "2.6.0" → "2.6" (the press's own name)
+  // Versions as everyone sees them (docs/VERSIONS.md): the app's "2.7.2" → "2.7.02"; what you HAVE also carries the
+  // site's code part from the page (<meta name="aevi-version" content="2.7.01.042">) → "2.7.01.042".
+  const nice = (v) => { const m = /^(\d+)\.(\d+)(?:\.(\d+))?/.exec(String(v || "")); return m ? `${m[1]}.${m[2]}.${String(Number(m[3] || 0)).padStart(2, "0")}` : String(v || ""); };
+  const have = (v) => { const code = ((document.querySelector('meta[name="aevi-version"]') || {}).content || "").split(".")[3]; return code ? `${nice(v)}.${code}` : nice(v); };
   const clock = (t) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   const dayWord = (t) => (new Date(t).toDateString() === new Date().toDateString() ? "today" : "tomorrow");
   const isDark = () => {
@@ -59,7 +81,8 @@ if (window === window.top) {
     }
     return false;
   };
-  const GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4h11l4 5-9.5 11L2.5 9z" fill="#e8b45a"/><path d="M2.5 9h19M8.5 4l-2 5 5.5 11M15.5 4l2 5-5.5 11M6.5 9 12 4l5.5 5" fill="none" stroke="#9a6a24" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+  // The Aevidine logo, built in (works on the can't-connect screen too) — written by scripts/build-brand-icons.mjs.
+  const LOGO = /* BRAND-LOGO:BEGIN */"data:image/png;base64,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"/* BRAND-LOGO:END */;
   const CSS = `
     :host{all:initial}
     .w{--bg:#fffdf9;--ink:#2c2219;--mute:#766954;--line:rgba(44,34,25,.09);--gold:#9a6a24;--gold-ink:#fff;--soft:#f4ede1;--track:#efe6d6;
@@ -75,8 +98,19 @@ if (window === window.top) {
     .pill{display:flex;align-items:center;gap:10px;height:40px;padding:0 6px 0 7px;border-radius:999px;background:var(--bg);
        box-shadow:0 0 0 1px var(--line),var(--sh);cursor:pointer;user-select:none}
     .pill:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-    .gem{flex:none;width:27px;height:27px;border-radius:50%;background:#14110d;display:grid;place-items:center}
-    .gem svg{width:16px;height:16px}
+    .pill{position:relative}
+    .dot{position:absolute;top:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:#e5383b;box-shadow:0 0 0 2px var(--bg)}
+    /* AFTER "LATER" (owner, 2026-11-21: like WhatsApp's bottom-left button — "red dot, that something is there, and you open
+       it and you can update from there"): the same element moves to the bottom-left as a round logo with a red dot, and stays
+       until the update is taken. Hover or click opens the same card, growing upward. */
+    .w[data-dock]{top:auto;right:auto;bottom:16px;left:16px;flex-direction:column-reverse;align-items:flex-start;animation-name:inDock}
+    @keyframes inDock{from{opacity:0;transform:translate3d(0,8px,0) scale(.97)}}
+    .w[data-dock] .pill{width:46px;height:46px;padding:0;gap:0;justify-content:center;border-radius:50%}
+    .w[data-dock] .lbl,.w[data-dock] .ring,.w[data-dock] .pill button{display:none!important}
+    .w[data-dock] .gem,.w[data-dock] .gem img{width:34px;height:34px}
+    .w[data-dock] .card{margin-top:0;margin-bottom:10px;transform-origin:bottom left}
+    .gem{flex:none;width:28px;height:28px;display:grid;place-items:center}
+    .gem img{width:28px;height:28px;display:block}
     .lbl{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
     .ring{width:26px;height:26px;margin-right:4px}
     .ring circle{fill:none;stroke-width:3}
@@ -116,7 +150,7 @@ if (window === window.top) {
     host.setAttribute("data-aevi-update", "");
     root = host.attachShadow({ mode: "open" });
     root.innerHTML = `<style>${CSS}</style><div class="w" role="status" aria-live="polite">
-      <div class="pill" tabindex="0" aria-expanded="false"><span class="gem">${GEM}</span><span class="lbl"></span>
+      <div class="pill" tabindex="0" aria-expanded="false"><span class="gem"><img src="${LOGO}" alt=""></span><span class="dot" hidden></span><span class="lbl"></span>
         <svg class="ring" viewBox="0 0 26 26" aria-hidden="true"><circle class="bg" cx="13" cy="13" r="10"/><circle class="fg" cx="13" cy="13" r="10" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>
         <button class="pri" data-a="restart">Restart</button><button class="sec" data-a="notnow">Not now</button></div>
       <div class="card" hidden><div class="k"></div><div class="t"></div><div class="s"></div>
@@ -126,7 +160,7 @@ if (window === window.top) {
         <div class="opts" data-sub="schedule" hidden><p class="cap">Restart into the update at</p><div class="time"><input type="time" value="23:30" aria-label="Time"><button class="pri" data-a="set">Set</button></div></div>
       </div></div>`;
     const w = root.querySelector(".w"), pill = root.querySelector(".pill");
-    const setOpen = (v) => { open = v; if (!v) sub = ""; draw(last); };
+    const setOpen = (v) => { open = v; if (!v) { sub = ""; forceOpen = false; } draw(last); };
     // Hover opens it on a computer; a click (or Enter) opens and keeps it open; leaving closes it unless a choice is half-made.
     w.addEventListener("mouseenter", () => { if (!open) setOpen(true); });
     w.addEventListener("mouseleave", () => { if (open && !sub) setOpen(false); });
@@ -148,7 +182,9 @@ if (window === window.top) {
       } else if (b.hasAttribute("data-later")) {
         let ms = Number(b.getAttribute("data-later"));
         if (b.getAttribute("data-later") === "tomorrow") { const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(9, 0, 0, 0); ms = t.getTime() - Date.now(); }
-        sub = ""; open = false; out(() => invoke("aevi:update-later", ms));
+        sub = ""; open = false; forceOpen = false;
+        if (last && last.dismissed) { invoke("aevi:update-later", ms); draw(last); }   // already the bottom-left button: it stays
+        else out(() => invoke("aevi:update-later", ms));                              // the pill leaves; it comes back bottom-left
       }
     });
     document.body.appendChild(host);
@@ -163,12 +199,25 @@ if (window === window.top) {
   const draw = (s) => {
     last = s;
     ticking(s);
-    const show = s && !s.dismissed && (s.phase === "downloading" || s.phase === "ready" || s.phase === "manual");
+    syncWaiting(s);
+    const show = s && (s.phase === "downloading" || s.phase === "ready" || s.phase === "manual");
     if (!show) { if (host) out(); return; }
-    if (!document.body) { document.addEventListener("DOMContentLoaded", () => draw(last), { once: true }); return; }
+    // Put off ("Later") = the bottom-left button with the red dot, until the update is taken or the reminder brings the pill back.
+    const docked = !forceOpen && !!s.dismissed && !s.scheduledAt && (s.phase === "ready" || s.phase === "manual");
+    // Docked and this page shows the update in its own menu: no button of ours on top of it (looked at again every 2 s,
+    // as panels open, close and change pages).
+    if (docked && !slotTimer) slotTimer = setInterval(() => { if (last) draw(last); }, 2000);
+    if (!docked && slotTimer) { clearInterval(slotTimer); slotTimer = null; }
+    if (docked && slotShown()) { if (host) out(); return; }
+    if (host && host.isConnected && root && root.querySelector(".w").hasAttribute("data-dock") !== docked) { out(() => draw(last)); return; }
+    // Only once the page has loaded and settled (owner 2026-11-21: "I have not seen the pill"): a pill put into the page
+    // before React took it over made React find HTML it didn't draw (error #418) and redraw everything — the pill with it.
+    if (!settled) { if (!settleWait) { settleWait = true; const go = () => setTimeout(() => { settled = true; draw(last); }, 1200); if (document.readyState === "complete") go(); else window.addEventListener("load", go, { once: true }); } return; }
     if (!host || !host.isConnected) { open = false; sub = ""; build(); }
     const $ = (q) => root.querySelector(q), $$ = (q) => root.querySelectorAll(q);
     $(".w").setAttribute("data-skin", isDark() ? "dark" : "light");
+    $(".w").toggleAttribute("data-dock", docked);
+    $(".dot").hidden = !docked;
     const name = s.appName || "Aevidine", v = nice(s.version), ready = s.phase === "ready";
     const sched = ready && s.scheduledAt, count = sched && s.countdown;
     const left = count ? Math.max(0, Math.round((s.scheduledAt - Date.now()) / 1000)) : 0;
@@ -180,13 +229,14 @@ if (window === window.top) {
     $(".pill [data-a=restart]").hidden = !ready || !!sched || open;   // opened: the card's "Restart now" is the one
     $(".pill [data-a=notnow]").hidden = !count;
     $(".pill").setAttribute("aria-expanded", String(open));
+    if (docked) $(".pill").setAttribute("aria-label", `Update ready: ${name} ${v}`); else $(".pill").removeAttribute("aria-label");
     // The card: only when it has something to offer (ready or the manual case), and only while opened.
     const card = $(".card");
     card.hidden = !open || s.phase === "downloading";
     $(".k").textContent = sched ? "Update scheduled" : ready ? "Update ready" : "Update available";
     $(".t").textContent = `${name} ${v}`;
     $(".s").innerHTML = sched ? `Restarts ${dayWord(s.scheduledAt)} at <b>${clock(s.scheduledAt)}</b> — about 5 seconds, your work is saved.`
-      : ready ? `You have <b>${nice(s.current) || "an older version"}</b>. Restarting takes about 5 seconds.` : (s.why || "Download the new version to update.");
+      : ready ? `You have <b>${have(s.current) || "an older version"}</b>. Restarting takes about 5 seconds.` : (s.why || "Download the new version to update.");
     $("[data-main]").hidden = !ready || !!sched;
     $("[data-sched]").hidden = !sched;
     $$(".opts").forEach((o) => { o.hidden = o.getAttribute("data-sub") !== sub; });
